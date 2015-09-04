@@ -1,0 +1,26 @@
+{
+  "name": "download",
+  "version": "1.0.0",
+  "description": "Test methods for downloading files from browsers",
+  "main": "index.html",
+  "dependencies": {
+    "connect": "^3.4.0",
+    "multi-download": "^2.0.0",
+    "serve-static": "^1.10.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nataki/download.git"
+  },
+  "keywords": [
+    "download",
+    "js"
+  ],
+  "author": "nataki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nataki/download/issues"
+  },
+  "homepage": "https://github.com/nataki/download"
+}

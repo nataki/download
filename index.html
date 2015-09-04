@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Test download methods</title>
+    <style>
+        a, button {
+            display: block;
+            margin: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<script>
+    var url = '/images/image1.png';
+    var fileName = 'test.png';
+
+    function triggerDownloadViaLink(){
+        var a = document.createElement('a');
+        a.download = fileName;
+        a.href = url;
+        a.dispatchEvent(new MouseEvent('click'));
+    }
+
+    function triggerDownloadViaIframe(){
+        function fallback(urls) {
+            var i = 0;
+
+            (function createIframe() {
+                var frame = document.createElement('iframe');
+                frame.style.display = 'none';
+                frame.src = urls[i++];
+                document.documentElement.appendChild(frame);
+
+                // the download init has to be sequential otherwise IE only use the first
+                var interval = setInterval(function () {
+                    if (frame.contentWindow.document.readyState === 'complete') {
+                        clearInterval(interval);
+
+                        // Safari needs a timeout
+                        setTimeout(function () {
+                            frame.parentNode.removeChild(frame);
+                        }, 1000);
+
+                        if (i < urls.length) {
+                            createIframe();
+                        }
+                    }
+                }, 100);
+            })();
+        }
+        fallback([url]);
+    }
+
+    function triggerDownload(){
+        window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = function(e) {
+            var response = xhr.response;
+            var blob = new Blob([response], {type: "image/png"});
+            var url = URL.createObjectURL(blob);
+            download(url, fileName);
+            URL.revokeObjectURL(url);
+        };
+
+        xhr.send();
+    }
+
+    function triggerDownloadBlob(){
+        window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function(e) {
+            var blob = xhr.response;
+//            var blob = new Blob([response], {type: "image/png"});
+            var url = URL.createObjectURL(blob);
+            download(url, fileName);
+            URL.revokeObjectURL(url);
+        };
+        xhr.send();
+    }
+
+    function triggerDownloadFS(){
+        window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+        function onError(e) {
+            console.log('Error', e);
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function(e) {
+            var response = xhr.response;
+            window.requestFileSystem(TEMPORARY, 1024 * 1024, function(fs) {
+             fs.root.getFile('image.png', {create: true}, function(fileEntry) {
+             fileEntry.createWriter(function(writer) {
+
+             writer.onwrite = function(e) { /!*...*!/ };
+             writer.onerror = function(e) { /!*...*!/ };
+
+             var blob = new Blob([response], {type: "image/png"});
+
+             writer.write(blob);
+
+             }, onError);
+             }, onError);
+             }, onError);
+        };
+        xhr.send();
+    }
+
+</script>
+<a href="/images/image1.png" download="important.txt">Download</a>
+<a href="http://mam-dev01:9900/EssenceDownloadServer/api/essences?emguid=2b1323d2-c4ec-41af-89e3-e96091f499eb&accesskey=fb69941e-4451-44a4-8896-a5ad6120f76e" download="important.txt">Download with error</a>
+<button onclick="triggerDownloadViaLink()">triggerDownloadViaLink</button>
+<button onclick="triggerDownloadViaIframe()">triggerDownloadViaIframe</button>
+<button onclick="triggerDownload()">triggerDownload</button>
+<button onclick="triggerDownloadBlob()">triggerDownloadBlob</button>
+<button onclick="triggerDownloadFS()">triggerDownloadFS</button>
+</body>
+</html>
